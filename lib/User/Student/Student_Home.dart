@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:firebase_quiz_app/Core/Widgets/AvalaibleQuiz.dart';
@@ -20,11 +21,6 @@ class _StudentHomeState extends State<StudentHome>
 
   String? studentName;
   final List<String> tabView = ['Available', 'Locked', 'Completed'];
-  final List<Widget> pages = [
-    const AvalaibleQuiz(),
-    const LockedQuiz(),
-    const CompletedQuiz(),
-  ];
 
   @override
   void initState() {
@@ -91,7 +87,7 @@ class _StudentHomeState extends State<StudentHome>
                 ),
                 child: TabBar(
                   controller: tabController,
-                  isScrollable: false, // 🔥 IMPORTANT
+                  isScrollable: false,
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
@@ -111,13 +107,34 @@ class _StudentHomeState extends State<StudentHome>
 
             /// TAB VIEW
             Expanded(
-              child: TabBarView(
-                controller: tabController,
-                children: const [
-                  AvalaibleQuiz(),
-                  LockedQuiz(),
-                  CompletedQuiz(),
-                ],
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: StudentHomeService.getAllQuiz(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("No Quiz Found"));
+                  }
+                  print("Docs count: ${snapshot.data!.docs.length}");
+
+                  for (var doc in snapshot.data!.docs) {
+                    print("Inside data isL ${doc.data()}");
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final quizzes = snapshot.data!.docs;
+                  return TabBarView(
+                    controller: tabController,
+                    children: [
+                      AvalaibleQuiz(quizzes: quizzes),
+                      LockedQuiz(),
+                      CompletedQuiz(),
+                    ],
+                  );
+                },
               ),
             ),
           ],

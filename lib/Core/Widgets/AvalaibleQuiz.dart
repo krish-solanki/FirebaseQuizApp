@@ -1,21 +1,54 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 
-class AvalaibleQuiz extends StatefulWidget {
-  const AvalaibleQuiz({super.key});
+class AvalaibleQuiz extends StatelessWidget {
+  final List<QueryDocumentSnapshot<Map<String, dynamic>>> quizzes;
+
+  const AvalaibleQuiz({super.key, required this.quizzes});
 
   @override
-  State<AvalaibleQuiz> createState() => _AvalaibleQuizState();
-}
-
-class _AvalaibleQuizState extends State<AvalaibleQuiz> {
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+
+    final available = quizzes.where((q) {
+      final data = q.data();
+
+      final start = (data['startDate'] as Timestamp).toDate();
+      final end = (data['endDate'] as Timestamp).toDate();
+      print("Quiz: ${data['title']}");
+      print("NOW   : $now");
+      print("START : $start");
+      print("END   : $end");
+      print("AVAILABLE = ${now.isAfter(start) && now.isBefore(end)}");
+      print("----------------");
+      print("Quiz is:  ${now.isAfter(start) && now.isBefore(end)}");
+      return now.isAfter(start) && now.isBefore(end);
+    }).toList();
+
+    if (available.isEmpty) {
+      return const Center(child: Text("No Available Quiz"));
+    }
+
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      itemCount: 5,
+      itemCount: available.length,
       itemBuilder: (context, index) {
+        final data = available[index].data();
+
+        final startDate = (data['startDate'] as Timestamp).toDate();
+        final endDate = (data['endDate'] as Timestamp).toDate();
+
+        final formattedStart = DateFormat(
+          'dd MMM yyyy, hh:mm a',
+        ).format(startDate);
+        final formattedEnd = DateFormat('dd MMM yyyy, hh:mm a').format(endDate);
+
+        final TextEditingController accessController = TextEditingController();
+
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: Container(
@@ -30,7 +63,10 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
               children: [
                 Row(
                   children: [
-                    Text('Data Structures', style: AppTextStyles.sectionTitle),
+                    Text(
+                      data['title'] ?? '',
+                      style: AppTextStyles.sectionTitle,
+                    ),
                     const Spacer(),
                     Container(
                       padding: EdgeInsets.symmetric(
@@ -42,7 +78,7 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Text(
-                        'Avalaible',
+                        'Available',
                         style: AppTextStyles.statusActive,
                       ),
                     ),
@@ -52,23 +88,37 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
                 SizedBox(height: 6.h),
 
                 Text(
-                  'Sep 10, 2025 - Sep 12, 2025',
+                  '$formattedStart - $formattedEnd',
                   style: AppTextStyles.bodySecondary,
                 ),
 
                 SizedBox(height: 10.h),
 
-                /// ACCESS CODE ROW
-                accessCodeRow(),
+                accessCodeRow(
+                  controller: accessController,
+                  onStartPressed: () {
+                    final enteredCode = accessController.text.trim();
+
+                    if (enteredCode == data['accessCode']) {
+                      print("Access Granted for ${data['title']}");
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Invalid Access Code")),
+                      );
+                    }
+                  },
+                ),
 
                 SizedBox(height: 8.h),
 
-                /// STUDENT COUNT
                 Row(
                   children: [
                     Icon(Icons.group, size: 16, color: AppColors.primaryBlue),
                     SizedBox(width: 6.w),
-                    Text('57 Students', style: AppTextStyles.bodySecondary),
+                    Text(
+                      "${data['totalAttendees'] ?? 0} Students",
+                      style: AppTextStyles.bodySecondary,
+                    ),
                   ],
                 ),
               ],
@@ -80,8 +130,8 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
   }
 
   Widget accessCodeRow({
-    TextEditingController? controller,
-    VoidCallback? onStartPressed,
+    required TextEditingController controller,
+    required VoidCallback onStartPressed,
     bool isEnabled = true,
   }) {
     return Container(
@@ -93,13 +143,12 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
       ),
       child: Row(
         children: [
-          /// 🔹 ACCESS CODE INPUT (CENTERED TEXT)
           Expanded(
             child: TextField(
               controller: controller,
               enabled: isEnabled,
               style: AppTextStyles.inputText,
-              textAlignVertical: TextAlignVertical.center, // ✅ FIX
+              textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
                 hintText: 'Enter Access Code',
                 hintStyle: AppTextStyles.inputHint,
@@ -109,7 +158,6 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
               ),
             ),
           ),
-
           SizedBox(
             height: double.infinity,
             child: GestureDetector(
@@ -122,7 +170,6 @@ class _AvalaibleQuizState extends State<AvalaibleQuiz> {
                     topRight: Radius.circular(10.r),
                     bottomRight: Radius.circular(10.r),
                   ),
-                  border: Border.all(color: AppColors.borderColor, width: 1.w),
                 ),
                 child: Center(
                   child: Text(

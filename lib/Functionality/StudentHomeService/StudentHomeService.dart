@@ -18,4 +18,11 @@ class StudentHomeService {
       return "Student";
     }
   }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllQuiz() {
+    return FirebaseFirestore.instance
+        .collection('modules')
+        .orderBy('startDate')
+        .snapshots();
+  }
 }
