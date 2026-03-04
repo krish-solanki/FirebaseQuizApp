@@ -5,6 +5,7 @@ import 'package:firebase_quiz_app/Core/Widgets/AvalaibleQuiz.dart';
 import 'package:firebase_quiz_app/Core/Widgets/CompleteQuiz.dart';
 import 'package:firebase_quiz_app/Core/Widgets/LockedQuiz.dart';
 import 'package:firebase_quiz_app/Functionality/StudentHomeService/StudentHomeService.dart';
+import 'package:firebase_quiz_app/User/Student/Student_Quiz_Question.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -45,15 +46,22 @@ class _StudentHomeState extends State<StudentHome>
           children: [
             SizedBox(height: 12.h),
 
-            /// TITLE
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Student Dashboard',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentQuizQuestion(),
+                  ),
+                ),
+                child: Text(
+                  'Student Dashboard',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ),

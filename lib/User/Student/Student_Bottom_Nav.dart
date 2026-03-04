@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
+import 'package:firebase_quiz_app/Core/Widgets/QuestionUI.dart';
 import 'package:firebase_quiz_app/User/Authentication/Login.dart';
 import 'package:firebase_quiz_app/User/Authentication/Register.dart';
 import 'package:firebase_quiz_app/User/Student/Student_Home.dart';
@@ -18,7 +19,11 @@ class StudentBottomNav extends StatefulWidget {
 class _StudentBottomNavState extends State<StudentBottomNav> {
   int selectedIndex = 0;
 
-  final List<Widget> screens = const [StudentHome(), Login(), StudentProfile()];
+  final List<Widget> screens = const [
+    StudentHome(),
+    Questions(),
+    StudentProfile(),
+  ];
 
   void onItemTapped(int index) {
     setState(() {
@@ -27,7 +32,7 @@ class _StudentBottomNavState extends State<StudentBottomNav> {
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
   }
 

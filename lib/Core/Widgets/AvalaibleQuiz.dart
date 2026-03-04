@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
+import 'package:firebase_quiz_app/Core/Widgets/QuestionUI.dart';
+import 'package:firebase_quiz_app/User/Student/Student_Quiz_Question.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -19,13 +21,6 @@ class AvalaibleQuiz extends StatelessWidget {
 
       final start = (data['startDate'] as Timestamp).toDate();
       final end = (data['endDate'] as Timestamp).toDate();
-      print("Quiz: ${data['title']}");
-      print("NOW   : $now");
-      print("START : $start");
-      print("END   : $end");
-      print("AVAILABLE = ${now.isAfter(start) && now.isBefore(end)}");
-      print("----------------");
-      print("Quiz is:  ${now.isAfter(start) && now.isBefore(end)}");
       return now.isAfter(start) && now.isBefore(end);
     }).toList();
 
@@ -100,7 +95,11 @@ class AvalaibleQuiz extends StatelessWidget {
                     final enteredCode = accessController.text.trim();
 
                     if (enteredCode == data['accessCode']) {
-                      print("Access Granted for ${data['title']}");
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => StudentQuizQuestion(),
+                        ),
+                      );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Invalid Access Code")),
