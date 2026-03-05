@@ -124,6 +124,7 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                     lastIndex = questions.length;
 
                     final currentQuestion = questions[index];
+                    final options = currentQuestion["options"];
                     return Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(20.r),
@@ -151,10 +152,10 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                             style: AppTextStyles.questionText,
                           ),
                           SizedBox(height: 24.h),
-                          _buildOption(0, "options"),
-                          _buildOption(1, "options"),
-                          _buildOption(2, "options"),
-                          _buildOption(3, "options"),
+                          _buildOption(0, options['A']),
+                          _buildOption(1, options['B']),
+                          _buildOption(2, options['C']),
+                          _buildOption(3, options['D']),
                         ],
                       ),
                     );
@@ -168,7 +169,7 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          if (index >0) {
+                          if (index > 0) {
                             setState(() => index--);
                           }
                         },
