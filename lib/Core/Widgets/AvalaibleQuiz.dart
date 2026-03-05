@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:firebase_quiz_app/Core/Widgets/QuestionUI.dart';
+import 'package:firebase_quiz_app/Functionality/StudentQuestionService/student_question)function.dart';
 import 'package:firebase_quiz_app/User/Student/Student_Quiz_Question.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -90,13 +92,18 @@ class AvalaibleQuiz extends StatelessWidget {
 
                 accessCodeRow(
                   controller: accessController,
-                  onStartPressed: () {
+                  onStartPressed: () async{
                     final enteredCode = accessController.text.trim();
 
                     if (enteredCode == data['accessCode']) {
+                        final attemptId = await StudentQuestionService.createAttemptId(
+                          FirebaseAuth.instance.currentUser!.uid,
+                          moduleId,
+                      );
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => StudentQuizQuestion(moduleId: moduleId),
+                          builder: (context) =>
+                              StudentQuizQuestion(moduleId: moduleId , attemptId: attemptId,),
                         ),
                       );
                     } else {
