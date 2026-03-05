@@ -48,20 +48,12 @@ class _StudentHomeState extends State<StudentHome>
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StudentQuizQuestion(),
-                  ),
-                ),
-                child: Text(
-                  'Student Dashboard',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+              child: Text(
+                'Student Dashboard',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),

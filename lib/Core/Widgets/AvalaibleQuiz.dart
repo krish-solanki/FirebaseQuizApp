@@ -18,7 +18,6 @@ class AvalaibleQuiz extends StatelessWidget {
 
     final available = quizzes.where((q) {
       final data = q.data();
-
       final start = (data['startDate'] as Timestamp).toDate();
       final end = (data['endDate'] as Timestamp).toDate();
       return now.isAfter(start) && now.isBefore(end);
@@ -33,7 +32,7 @@ class AvalaibleQuiz extends StatelessWidget {
       itemCount: available.length,
       itemBuilder: (context, index) {
         final data = available[index].data();
-
+        final moduleId = available[index].id;
         final startDate = (data['startDate'] as Timestamp).toDate();
         final endDate = (data['endDate'] as Timestamp).toDate();
 
@@ -97,7 +96,7 @@ class AvalaibleQuiz extends StatelessWidget {
                     if (enteredCode == data['accessCode']) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => StudentQuizQuestion(),
+                          builder: (context) => StudentQuizQuestion(moduleId: moduleId),
                         ),
                       );
                     } else {

@@ -1,10 +1,12 @@
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
+import 'package:firebase_quiz_app/Functionality/StudentQuestionService/student_question)function.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class StudentQuizQuestion extends StatefulWidget {
-  const StudentQuizQuestion({super.key});
+  String moduleId;
+  StudentQuizQuestion({super.key, required this.moduleId});
 
   @override
   State<StudentQuizQuestion> createState() => _StudentQuizQuestionState();
@@ -12,8 +14,14 @@ class StudentQuizQuestion extends StatefulWidget {
 
 class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
   int selectedOptionIndex = -1;
-  int index = 3;
-  int lastIndex = 10;
+  int index = 0;
+  int? lastIndex;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +84,7 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
                   child: LinearProgressIndicator(
-                    value: index / lastIndex,
+                    value: lastIndex == null ? 0 : (index + 1) / lastIndex!,
                     minHeight: 7.h,
                     backgroundColor: const Color(0xFFE3E6F0),
                     valueColor: AlwaysStoppedAnimation<Color>(
@@ -95,41 +103,63 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                 SizedBox(height: 22.h),
 
                 /// QUESTION CARD
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20.r),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                StreamBuilder(
+                  stream: StudentQuestionService.fetchQuestions(
+                    widget.moduleId,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Question $index:",
-                        style: AppTextStyles.sectionTitle,
-                      ),
-                      SizedBox(height: 12.h),
-                      Text(
-                        "What is Flutter primarily used for?",
-                        style: AppTextStyles.questionText,
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildOption(0, "A UI toolkit"),
-                      _buildOption(1, "A web browser"),
-                      _buildOption(2, "A search engine"),
-                      _buildOption(3, "A programming language"),
-                    ],
-                  ),
-                ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
 
+                    if (snapshot.hasError) {
+                      return const Center(child: Text("Something went wrong"));
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(child: Text("No Questions Found"));
+                    }
+
+                    final questions = snapshot.data!.docs;
+                    lastIndex = questions.length;
+
+                    final currentQuestion = questions[index];
+                    return Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20.r),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Question ${index + 1} / $lastIndex",
+                            style: AppTextStyles.sectionTitle,
+                          ),
+                          SizedBox(height: 12.h),
+                          Text(
+                            currentQuestion['question'],
+                            style: AppTextStyles.questionText,
+                          ),
+                          SizedBox(height: 24.h),
+                          _buildOption(0, "options"),
+                          _buildOption(1, "options"),
+                          _buildOption(2, "options"),
+                          _buildOption(3, "options"),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 SizedBox(height: 30.h),
 
                 /// NAVIGATION BUTTONS
@@ -138,7 +168,9 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          if (index > 1) setState(() => index--);
+                          if (index >0) {
+                            setState(() => index--);
+                          }
                         },
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 14.h),
@@ -167,7 +199,9 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
                         ),
                         child: ElevatedButton(
                           onPressed: () {
-                            if (index < lastIndex) setState(() => index++);
+                            if (index < lastIndex! - 1) {
+                              setState(() => index++);
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -239,4 +273,6 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
       ),
     );
   }
+
+  Future<void> fatchQuestions() async {}
 }
