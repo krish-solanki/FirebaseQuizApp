@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
 
 class StudentQuestionService {
   static Stream<QuerySnapshot<Map<String, dynamic>>> fetchQuestions(
@@ -15,12 +16,11 @@ class StudentQuestionService {
   static Future<String> createAttemptId(
     String studentId,
     String moduleId,
+    String title,
   ) async {
     final firestore = FirebaseFirestore.instance;
 
-    final questionRef = firestore.collection('quizAttempts');
-
-    final docRef = await questionRef.add({
+    final docRef = await firestore.collection('quizAttempts').add({
       "studentId": studentId,
       "moduleId": moduleId,
       "startedAt": FieldValue.serverTimestamp(),
@@ -29,7 +29,21 @@ class StudentQuestionService {
       "answers": {},
     });
 
-    return docRef.id;
+    final attemptId = docRef.id;
+
+    await firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('quizAttempts')
+        .doc(attemptId)
+        .set({
+          "quizName": title,
+          "moduleId": moduleId,
+          "marks": null,
+          "attemptDate": FieldValue.serverTimestamp(),
+        });
+
+    return attemptId;
   }
 
   static Future<void> saveAnswer(
@@ -43,7 +57,11 @@ class StudentQuestionService {
         .update({"answers.$questionId": selectedLetter});
   }
 
-  static Future<int> submitQuiz(String attemptId, String moduleId) async {
+  static Future<int> submitQuiz(
+    String attemptId,
+    String moduleId,
+    String studentId,
+  ) async {
     final firestore = FirebaseFirestore.instance;
 
     final attemptDoc = await firestore
@@ -76,6 +94,26 @@ class StudentQuestionService {
       "score": score,
       "submittedAt": FieldValue.serverTimestamp(),
     });
+
+    await firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('quizAttempts')
+        .doc(attemptId)
+        .update({"marks": score});
     return score;
+  }
+
+  static Future<bool> isAttempted(String studentId, String moduleId) async {
+    final firestore = FirebaseFirestore.instance;
+
+    final snapshot = await firestore
+        .collection('users')
+        .doc(studentId)
+        .collection('quizAttempts')
+        .where('moduleId', isEqualTo: moduleId)
+        .get();
+
+    return snapshot.docs.isNotEmpty;
   }
 }

@@ -11,7 +11,6 @@ import 'package:intl/intl.dart';
 
 class AvalaibleQuiz extends StatelessWidget {
   final List<QueryDocumentSnapshot<Map<String, dynamic>>> quizzes;
-
   const AvalaibleQuiz({super.key, required this.quizzes});
 
   @override
@@ -92,25 +91,46 @@ class AvalaibleQuiz extends StatelessWidget {
 
                 accessCodeRow(
                   controller: accessController,
-                  onStartPressed: () async{
+                  onStartPressed: () async {
                     final enteredCode = accessController.text.trim();
 
-                    if (enteredCode == data['accessCode']) {
-                        final attemptId = await StudentQuestionService.createAttemptId(
-                          FirebaseAuth.instance.currentUser!.uid,
-                          moduleId,
-                      );
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              StudentQuizQuestion(moduleId: moduleId , attemptId: attemptId,),
-                        ),
-                      );
-                    } else {
+                    if (enteredCode != data['accessCode']) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Invalid Access Code")),
                       );
+                      return;
                     }
+
+                    bool alreadyAttempted =
+                        await StudentQuestionService.isAttempted(
+                          FirebaseAuth.instance.currentUser!.uid,
+                          moduleId,
+                        );
+
+                    if (alreadyAttempted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("You have already attempted this quiz"),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final attemptId =
+                        await StudentQuestionService.createAttemptId(
+                          FirebaseAuth.instance.currentUser!.uid,
+                          moduleId,
+                          data['title'],
+                        );
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => StudentQuizQuestion(
+                          moduleId: moduleId,
+                          attemptId: attemptId,
+                        ),
+                      ),
+                    );
                   },
                 ),
 

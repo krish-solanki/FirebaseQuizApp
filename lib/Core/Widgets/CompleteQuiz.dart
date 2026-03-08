@@ -1,8 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 
 class CompletedQuiz extends StatefulWidget {
   const CompletedQuiz({super.key});
@@ -12,6 +12,7 @@ class CompletedQuiz extends StatefulWidget {
 }
 
 class _CompletedQuizState extends State<CompletedQuiz> {
+  final userId = FirebaseAuth.instance.currentUser!.uid;
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -76,8 +77,7 @@ class _CompletedQuizState extends State<CompletedQuiz> {
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: () {
-                      },
+                      onPressed: () {},
                       child: Text(
                         'View Result',
                         style: AppTextStyles.buttonSecondary,

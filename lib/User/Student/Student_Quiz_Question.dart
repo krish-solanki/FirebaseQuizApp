@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:firebase_quiz_app/Functionality/StudentQuestionService/student_question)function.dart';
@@ -19,6 +20,7 @@ class StudentQuizQuestion extends StatefulWidget {
 }
 
 class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
+  final studentId = FirebaseAuth.instance.currentUser!.uid;
   int selectedOptionIndex = -1;
   int index = 0;
   int? lastIndex;
@@ -139,18 +141,20 @@ class _StudentQuizQuestionState extends State<StudentQuizQuestion> {
 
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (index < lastIndex! - 1) {
                               setState(() {
                                 index++;
                                 selectedOptionIndex = -1;
                               });
-                            }
-
-                            if (index == lastIndex! - 1) {
-                              StudentQuestionService.submitQuiz(
-                                widget.attemptId , widget.moduleId
+                            } else {
+                              await StudentQuestionService.submitQuiz(
+                                widget.attemptId,
+                                widget.moduleId,
+                                studentId,
                               );
+
+                              Navigator.pop(context);
                             }
                           },
                           child: const Text("Next"),
