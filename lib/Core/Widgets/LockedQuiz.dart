@@ -1,21 +1,47 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 
-class LockedQuiz extends StatefulWidget {
-  const LockedQuiz({super.key});
+class LockedQuiz extends StatelessWidget {
+  final List<QueryDocumentSnapshot<Map<String, dynamic>>> quizzes;
+
+  const LockedQuiz({super.key, required this.quizzes});
 
   @override
-  State<LockedQuiz> createState() => _LockedQuizState();
-}
-
-class _LockedQuizState extends State<LockedQuiz> {
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+
+    final lockedQuizzes = quizzes.where((q) {
+      final data = q.data();
+      final start = (data['startDate'] as Timestamp).toDate();
+      return now.isBefore(start);
+    }).toList();
+
+    if (lockedQuizzes.isEmpty) {
+      return const Center(child: Text("No Locked Quiz"));
+    }
+
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      itemCount: 5,
+      itemCount: lockedQuizzes.length,
       itemBuilder: (context, index) {
+        final data = lockedQuizzes[index].data();
+
+        final startDate = (data['startDate'] as Timestamp).toDate();
+        final endDate = (data['endDate'] as Timestamp).toDate();
+
+        final formattedDate =
+            "${DateFormat('dd MMM yyyy').format(startDate)} - ${DateFormat('dd MMM yyyy').format(endDate)}";
+
+        final duration = startDate.difference(now);
+
+        final days = duration.inDays;
+        final hours = duration.inHours % 24;
+        final minutes = duration.inMinutes % 60;
+
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
           child: Container(
@@ -28,9 +54,13 @@ class _LockedQuizState extends State<LockedQuiz> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                /// TITLE + LOCK STATUS
                 Row(
                   children: [
-                    Text('Data Structures', style: AppTextStyles.sectionTitle),
+                    Text(
+                      data['title'] ?? '',
+                      style: AppTextStyles.sectionTitle,
+                    ),
                     const Spacer(),
                     Container(
                       padding: EdgeInsets.symmetric(
@@ -48,9 +78,9 @@ class _LockedQuizState extends State<LockedQuiz> {
                             size: 16,
                             color: AppColors.warningYellow,
                           ),
-                          SizedBox(width: 2.w),
+                          SizedBox(width: 4.w),
                           Text(
-                            'Start in 2d 4h 30m',
+                            'Starts in ${days}d ${hours}h ${minutes}m',
                             style: AppTextStyles.statusWarning,
                           ),
                         ],
@@ -61,24 +91,25 @@ class _LockedQuizState extends State<LockedQuiz> {
 
                 SizedBox(height: 6.h),
 
-                Text(
-                  'Sep 10, 2025 - Sep 12, 2025',
-                  style: AppTextStyles.bodySecondary,
-                ),
+                /// DATE RANGE
+                Text(formattedDate, style: AppTextStyles.bodySecondary),
 
                 SizedBox(height: 10.h),
 
-                /// ACCESS CODE ROW
+                /// ACCESS CODE (DISABLED)
                 accessCodeRow(),
 
                 SizedBox(height: 8.h),
 
-                /// STUDENT COUNT
+                /// STUDENTS COUNT
                 Row(
                   children: [
                     Icon(Icons.group, size: 16, color: AppColors.primaryBlue),
                     SizedBox(width: 6.w),
-                    Text('57 Students', style: AppTextStyles.bodySecondary),
+                    Text(
+                      "${data['totalAttendees'] ?? 0} Students",
+                      style: AppTextStyles.bodySecondary,
+                    ),
                   ],
                 ),
               ],
@@ -89,11 +120,7 @@ class _LockedQuizState extends State<LockedQuiz> {
     );
   }
 
-  Widget accessCodeRow({
-    TextEditingController? controller,
-    VoidCallback? onStartPressed,
-    bool isEnabled = false,
-  }) {
+  Widget accessCodeRow({bool isEnabled = false}) {
     return Container(
       height: 44.h,
       decoration: BoxDecoration(
@@ -103,13 +130,11 @@ class _LockedQuizState extends State<LockedQuiz> {
       ),
       child: Row(
         children: [
-          /// 🔹 ACCESS CODE INPUT (CENTERED TEXT)
           Expanded(
             child: TextField(
-              controller: controller,
-              enabled: isEnabled,
+              enabled: false,
               style: AppTextStyles.inputText,
-              textAlignVertical: TextAlignVertical.center, // ✅ FIX
+              textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
                 hintText: 'Enter Access Code',
                 hintStyle: AppTextStyles.inputHint,
@@ -119,36 +144,27 @@ class _LockedQuizState extends State<LockedQuiz> {
               ),
             ),
           ),
-
-          SizedBox(
-            height: double.infinity,
-            child: GestureDetector(
-              onTap: isEnabled ? onStartPressed : null,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                decoration: BoxDecoration(
-                  color: AppColors.lockedBgColor,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(10.r),
-                    bottomRight: Radius.circular(10.r),
-                  ),
-                  border: Border.all(color: AppColors.borderColor, width: 1.w),
-                ),
-                child: Center(
-                  child: Row(
-                    children: [
-                      Icon(Icons.lock, size: 16, color: AppColors.textDisabled),
-                      Text(
-                        'Locked',
-                        style: AppTextStyles.buttonPrimary.copyWith(
-                          fontSize: 13.sp,
-                          color: AppColors.textDisabled,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            decoration: BoxDecoration(
+              color: AppColors.lockedBgColor,
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(10.r),
+                bottomRight: Radius.circular(10.r),
               ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock, size: 16, color: AppColors.textDisabled),
+                SizedBox(width: 4.w),
+                Text(
+                  'Locked',
+                  style: AppTextStyles.buttonPrimary.copyWith(
+                    fontSize: 13.sp,
+                    color: AppColors.textDisabled,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

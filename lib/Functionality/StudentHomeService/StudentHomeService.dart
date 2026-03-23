@@ -13,6 +13,7 @@ class StudentHomeService {
           .doc(uid)
           .get();
 
+      print("USER DATA: ${doc.data()}"); // 🔥 ADD THIS
       return doc.data()?['name'] ?? "Student";
     } catch (e) {
       return "Student";
@@ -23,6 +24,16 @@ class StudentHomeService {
     return FirebaseFirestore.instance
         .collection('modules')
         .orderBy('startDate')
+        .snapshots();
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getCompletedQuizzes(
+    String studentId,
+  ) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(studentId)
+        .collection('quizAttempts')
         .snapshots();
   }
 }

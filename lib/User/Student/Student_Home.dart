@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:firebase_quiz_app/Core/Widgets/AvalaibleQuiz.dart';
 import 'package:firebase_quiz_app/Core/Widgets/CompleteQuiz.dart';
 import 'package:firebase_quiz_app/Core/Widgets/LockedQuiz.dart';
 import 'package:firebase_quiz_app/Functionality/StudentHomeService/StudentHomeService.dart';
-import 'package:firebase_quiz_app/User/Student/Student_Quiz_Question.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -20,9 +20,8 @@ class _StudentHomeState extends State<StudentHome>
     with TickerProviderStateMixin {
   late TabController tabController;
 
-  String? studentName;
   final List<String> tabView = ['Available', 'Locked', 'Completed'];
-
+  String? stuName;
   @override
   void initState() {
     super.initState();
@@ -38,6 +37,8 @@ class _StudentHomeState extends State<StudentHome>
 
   @override
   Widget build(BuildContext context) {
+    final studentId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       backgroundColor: AppColors.appBackground,
       body: SafeArea(
@@ -61,7 +62,7 @@ class _StudentHomeState extends State<StudentHome>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
-                'Hello, $studentName',
+                'Hello, ${stuName ?? "Student"}',
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
@@ -76,7 +77,6 @@ class _StudentHomeState extends State<StudentHome>
 
             const SizedBox(height: 16),
 
-            /// TAB BAR (FIXED ✅ FULL WIDTH)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
@@ -87,7 +87,6 @@ class _StudentHomeState extends State<StudentHome>
                 ),
                 child: TabBar(
                   controller: tabController,
-                  isScrollable: false,
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   indicator: BoxDecoration(
@@ -105,7 +104,6 @@ class _StudentHomeState extends State<StudentHome>
 
             const SizedBox(height: 12),
 
-            /// TAB VIEW
             Expanded(
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: StudentHomeService.getAllQuiz(),
@@ -117,21 +115,17 @@ class _StudentHomeState extends State<StudentHome>
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(child: Text("No Quiz Found"));
                   }
-                  print("Docs count: ${snapshot.data!.docs.length}");
 
-                  for (var doc in snapshot.data!.docs) {
-                    print("Inside data isL ${doc.data()}");
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
                   final quizzes = snapshot.data!.docs;
+
                   return TabBarView(
                     controller: tabController,
                     children: [
                       AvalaibleQuiz(quizzes: quizzes),
-                      LockedQuiz(),
-                      CompletedQuiz(),
+
+                      LockedQuiz(quizzes: quizzes),
+
+                      CompletedQuiz(quizzes: quizzes, studentId: studentId),
                     ],
                   );
                 },
@@ -143,15 +137,15 @@ class _StudentHomeState extends State<StudentHome>
     );
   }
 
-  getStudentName() async {
+  Future<void> getStudentName() async {
     try {
       final name = await StudentHomeService.getStudentName();
       setState(() {
-        studentName = name;
+        stuName = name;
       });
     } catch (e) {
       setState(() {
-        studentName = 'Student';
+        stuName = "Student";
       });
     }
   }

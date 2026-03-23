@@ -43,6 +43,25 @@ class StudentQuestionService {
           "attemptDate": FieldValue.serverTimestamp(),
         });
 
+    final snapshot = await firestore
+        .collection('modules')
+        .doc(moduleId)
+        .collection('result')
+        .get();
+
+    int totalAttendees = snapshot.docs.length;
+
+    await firestore
+        .collection('modules')
+        .doc(moduleId)
+        .collection('result')
+        .doc(attemptId)
+        .set({'studentId': studentId, 'marks': 0});
+
+    await firestore.collection('modules').doc(moduleId).update({
+      'totalAttendees': totalAttendees + 1,
+    });
+
     return attemptId;
   }
 
@@ -94,6 +113,13 @@ class StudentQuestionService {
       "score": score,
       "submittedAt": FieldValue.serverTimestamp(),
     });
+
+    await firestore
+        .collection('modules')
+        .doc(moduleId)
+        .collection('result')
+        .doc(attemptId)
+        .update({'marks': score});
 
     await firestore
         .collection('users')
