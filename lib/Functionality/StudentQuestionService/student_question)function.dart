@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StudentQuestionService {
   static Stream<QuerySnapshot<Map<String, dynamic>>> fetchQuestions(
@@ -18,14 +19,18 @@ class StudentQuestionService {
     String title,
   ) async {
     final firestore = FirebaseFirestore.instance;
+    final userDoc = await firestore.collection('users').doc(studentId).get();
+    final studentName = userDoc.data()?['name'] ?? "Student";
 
     final docRef = await firestore.collection('quizAttempts').add({
       "studentId": studentId,
       "moduleId": moduleId,
+      "quizName": title,
       "startedAt": FieldValue.serverTimestamp(),
       "submittedAt": null,
       "score": null,
       "answers": {},
+      "studentName": studentName,
     });
 
     final attemptId = docRef.id;

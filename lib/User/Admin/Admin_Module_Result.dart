@@ -1,16 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
+import 'package:firebase_quiz_app/Functionality/AdminResultService/Admin_Module_Result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AdminModuleResult extends StatefulWidget {
-  const AdminModuleResult({super.key});
+  String moduleId;
+  AdminModuleResult({super.key, required this.moduleId});
 
   @override
   State<AdminModuleResult> createState() => _AdminModuleResultState();
 }
 
 class _AdminModuleResultState extends State<AdminModuleResult> {
+  int? totalMarks;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getTotalMarks();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,53 +200,72 @@ class _AdminModuleResultState extends State<AdminModuleResult> {
               padding: EdgeInsets.only(left: 14.sp, bottom: 8.sp, top: 5.sp),
               child: Text('Student Marks', style: AppTextStyles.sectionTitle),
             ),
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.vertical,
-                itemCount: 50,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 10.h),
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBackground,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: AppColors.borderColor),
-                      ),
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(30.r),
-                            child: Image.asset(
-                              'images/profile.jpg',
-                              height: 56.h,
-                              width: 56.w,
-                              fit: BoxFit.cover,
-                            ),
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: AdminModuleResultService.getQuizResults(widget.moduleId),
+
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final results = snapshot.data!.docs;
+
+                if (results.isEmpty) {
+                  return const Center(child: Text("No Attempts Yet"));
+                }
+                return Expanded(
+                  child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: results.length,
+                    itemBuilder: (context, index) {
+                      final data = results[index].data();
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 10.h),
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardBackground,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(color: AppColors.borderColor),
                           ),
-
-                          SizedBox(width: 12.w),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text("Krish", style: AppTextStyles.profileName),
-                              SizedBox(height: 4.h),
-                              Text('', style: AppTextStyles.profileEmail),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(30.r),
+                                child: Image.asset(
+                                  'images/profile.jpg',
+                                  height: 56.h,
+                                  width: 56.w,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+
+                              SizedBox(width: 12.w),
+
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${data['studentName'] ?? 'Student'}",
+                                    style: AppTextStyles.profileName,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text('', style: AppTextStyles.profileEmail),
+                                ],
+                              ),
+
+                              const Spacer(),
+                              Text('${data['marks']} / ${totalMarks}'),
+                              Icon(Icons.arrow_forward_ios_sharp),
                             ],
                           ),
-
-                          const Spacer(),
-                          Text('19 / 20'),
-                          Icon(Icons.arrow_forward_ios_sharp),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -264,5 +294,22 @@ class _AdminModuleResultState extends State<AdminModuleResult> {
         ),
       ),
     );
+  }
+
+  void getTotalMarks() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('modules')
+          .doc(widget.moduleId)
+          .get();
+
+      final data = doc.data();
+
+      setState(() {
+        totalMarks = data?['totalQuestions'] ?? 0;
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 }

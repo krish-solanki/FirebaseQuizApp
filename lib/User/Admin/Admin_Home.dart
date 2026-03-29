@@ -149,6 +149,7 @@ class _AdminHomeState extends State<AdminHome> {
                     itemCount: modules.length,
                     itemBuilder: (context, index) {
                       int? status;
+                      final moduleId = modules[index].id;
                       final data = modules[index];
                       final now = DateTime.now();
                       final startDate = (data['startDate'] as Timestamp)
@@ -162,7 +163,7 @@ class _AdminHomeState extends State<AdminHome> {
                         status = 2;
                       }
                       return GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AdminModuleResult())),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AdminModuleResult(moduleId: moduleId,))),
                         child: _quizCard(
                           context: context,
                           title: data['title'],
