@@ -18,6 +18,7 @@ class AdminHomefService {
     try {
       final sanpshot = await FirebaseFirestore.instance
           .collection('users')
+          .where('role', isEqualTo: 'student')
           .count()
           .get();
 

@@ -6,6 +6,7 @@ import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
 import 'package:firebase_quiz_app/Functionality/AdminHomeService/AdminHomeFunction.dart';
 import 'package:firebase_quiz_app/User/Admin/Admin_Add_Question.dart';
+import 'package:firebase_quiz_app/User/Admin/Admin_Module_Result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -147,19 +148,30 @@ class _AdminHomeState extends State<AdminHome> {
                   return ListView.builder(
                     itemCount: modules.length,
                     itemBuilder: (context, index) {
+                      int? status;
                       final data = modules[index];
+                      final now = DateTime.now();
                       final startDate = (data['startDate'] as Timestamp)
                           .toDate();
                       final endDate = (data['endDate'] as Timestamp).toDate();
-                      return _quizCard(
-                        context: context,
-                        title: data['title'],
-                        description: data['description'],
-                        startdate: startDate,
-                        enddate: endDate,
-                        students: data['totalAttendees'].toString(),
-                        isActive: data['isActive'],
-                        isPending: data['isPending'],
+                      if (startDate.isBefore(now) && endDate.isAfter(now)) {
+                        status = 0;
+                      } else if (endDate.isBefore(now)) {
+                        status = 1;
+                      } else {
+                        status = 2;
+                      }
+                      return GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AdminModuleResult())),
+                        child: _quizCard(
+                          context: context,
+                          title: data['title'],
+                          description: data['description'],
+                          startdate: startDate,
+                          enddate: endDate,
+                          students: data['totalAttendees'].toString(),
+                          exam_status: status,
+                        ),
                       );
                     },
                   );
@@ -255,19 +267,16 @@ class _AdminHomeState extends State<AdminHome> {
     required DateTime startdate,
     required DateTime enddate,
     required String students,
-    required bool isActive,
-    required bool isPending,
+    required int exam_status,
   }) {
     Color statusColor;
 
-    if (isPending) {
-      statusColor = AppColors.warningYellow;
+    if (exam_status == 0) {
+      statusColor = AppColors.successGreen;
+    } else if (exam_status == 1) {
+      statusColor = AppColors.errorRed;
     } else {
-      if (isActive) {
-        statusColor = AppColors.successGreen;
-      } else {
-        statusColor = AppColors.errorRed;
-      }
+      statusColor = AppColors.warningYellow;
     }
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h, left: 12.r, right: 12.r),
@@ -313,11 +322,9 @@ class _AdminHomeState extends State<AdminHome> {
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Text(
-                      isPending
-                          ? "Pending"
-                          : isActive
-                          ? "Active"
-                          : "Completed",
+                      exam_status == 0  ? "Active"
+                          : exam_status == 1 ? "Completed"
+                          : "Pending",
                       style: AppTextStyles.statusActive,
                     ),
                   ),
