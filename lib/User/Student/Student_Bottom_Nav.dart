@@ -1,11 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
-import 'package:firebase_quiz_app/Core/Widgets/QuestionUI.dart';
-import 'package:firebase_quiz_app/User/Authentication/Login.dart';
-import 'package:firebase_quiz_app/User/Authentication/Register.dart';
 import 'package:firebase_quiz_app/User/Student/Student_Home.dart';
 import 'package:firebase_quiz_app/User/Student/Student_Profile.dart';
+import 'package:firebase_quiz_app/User/Student/Student_Result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -21,7 +18,7 @@ class _StudentBottomNavState extends State<StudentBottomNav> {
 
   final List<Widget> screens = const [
     StudentHome(),
-    Questions(),
+    StudentResult(),
     StudentProfile(),
   ];
 

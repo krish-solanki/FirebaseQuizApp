@@ -12,7 +12,7 @@ class LockedQuiz extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+     final now = DateTime.now();
 
     final lockedQuizzes = quizzes.where((q) {
       final data = q.data();
