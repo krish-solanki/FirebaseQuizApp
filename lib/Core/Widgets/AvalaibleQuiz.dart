@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_quiz_app/Core/Style/AppColors.dart';
 import 'package:firebase_quiz_app/Core/Style/AppTextStyle.dart';
-import 'package:firebase_quiz_app/Core/Widgets/QuestionUI.dart';
 import 'package:firebase_quiz_app/Functionality/StudentQuestionService/student_question)function.dart';
 import 'package:firebase_quiz_app/User/Student/Student_Quiz_Question.dart';
 import 'package:flutter/material.dart';
