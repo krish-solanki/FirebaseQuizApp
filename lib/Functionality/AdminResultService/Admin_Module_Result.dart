@@ -5,8 +5,9 @@ class AdminModuleResultService {
     String moduleId,
   ) {
     return FirebaseFirestore.instance
-        .collectionGroup('quizAttempts')
-        .where('moduleId', isEqualTo: moduleId)
+        .collection('modules')
+        .doc(moduleId)
+        .collection('quizAttempts')
         .snapshots();
   }
 }
